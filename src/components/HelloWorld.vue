@@ -1,128 +1,292 @@
-<!--
 <template>
-  <li v-for="producto in productos" v-bind:key="producto.id">
-  {{producto.nombre}}
-  {{producto.marca}}
-  {{producto.tipo}}
-  </li>
-</template> -->
+  <div class="container">
+    <h2 class="title">Buscar Restaurantes<br><br></h2>
 
-<template>
-  <div class="centerTable">
-    <h2>Productos ingresados en el sistema</h2>
-    <table class="center.table">
-      <thead>
-        <tr>
-          <th>Nombre</th>
-          <th>Marca</th>
-          <th>Tipo</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="producto in productos" v-bind:key="producto.id">
-          <td>{{producto.nombre}}</td>
-          <td>{{producto.marca}}</td>
-          <td>{{producto.tipo}}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div>
-    <h2>Agregar nuevo producto</h2>
-    <form>
-      <label>Tipo:</label>
-      <input type="text" v-model="nuevoProducto.tipo">
-      <label>Marca:</label>
-      <input type="text" v-model="nuevoProducto.marca">
-      <label>Nombre:</label>
-      <input type="text" v-model="nuevoProducto.nombre">
-      <button type="button" @click="enviarProducto">Enviar</button>
-    </form>
+    <!-- Filtros -->
+    <div class="form-row">
+      <!-- Tipo de Cocina -->
+      <div class="form-group">
+        <label for="cuisine_type">Tipo de Cocina:</label>
+        <select id="cuisine_type" v-model="filtros.tipoCocina" class="form-control">
+          <option value="">-- Seleccionar --</option>
+          <option value="Italian">Italiana</option>
+          <option value="Cafe">Café</option>
+          <option value="Seafood">Mariscos</option>
+          <option value="American">Americana</option>
+          <option value="Grill">Parrilla</option>
+          <option value="Colombian">Colombiana</option>
+          <option value="Fusion">Fusión</option>
+          <option value="Argentinian">Argentina</option>
+        </select>
+      </div>
+
+      <!-- Horario de Apertura -->
+      <div class="form-group">
+        <label for="opening_hours">Disponibilidad de Hora:</label>
+        <input type="number" id="opening_hours" v-model="filtros.horario" class="form-control" placeholder="ej., 18">
+      </div>
+
+      <!-- Métodos de Pago -->
+      <div class="form-group">
+        <label for="payment_methods">Métodos de Pago:</label>
+        <select id="payment_methods" v-model="filtros.metodosPago" class="form-control">
+          <option value="">-- Seleccionar --</option>
+          <option value="Cash">Efectivo</option>
+          <option value="Mobile Payment">Pago Móvil</option>
+          <option value="Debit Card">Tarjeta Débito</option>
+        </select>
+      </div>
+
+      <!-- Vegetariano -->
+      <div class="form-group">
+        <label for="vegetarian">Vegetariano:</label>
+        <select id="vegetarian" v-model="filtros.vegetariano" class="form-control">
+          <option value="">-- Seleccionar --</option>
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+
+      <!-- Entrega a Domicilio -->
+      <div class="form-group">
+        <label for="delivery">Entrega a Domicilio:</label>
+        <select id="delivery" v-model="filtros.entregaDomicilio" class="form-control">
+          <option value="">-- Seleccionar --</option>
+          <option value="true">Sí</option>
+          <option value="false">No</option>
+        </select>
+      </div>
+    </div>
+    <br><br>
+    <!-- Nombre de usuario y botón de buscar -->
+    <div class="form-row">
+      <div class="form-group"><br>
+        <input type="text" id="username" v-model="usuario" class="form-control" placeholder="Nombre de usuario" />
+      </div>
+      <div class="form-group button-container">
+        <button class="btn-submit" @click="obtenerRecomendaciones">Enviar</button>
+      </div>
+    </div>
+
+    <!-- Estado de carga -->
+    <div v-if="loading" class="alert info">Cargando...</div>
+    <div v-if="error" class="alert error">{{ error }}</div>
+
+    <!-- Lista de recomendaciones -->
+   <ul v-if="recomendaciones.length" class="recommendation-list">
+      <li v-for="(recomendacion, index) in recomendaciones" :key="index">
+        {{ recomendacion.nombre }}: {{ recomendacion.porcentaje }}%
+      </li>
+    </ul>
+        
+     <!-- Mapa -->
+    <div id="map-container">
+      <div id="map"></div>
+    </div>
+     
   </div>
 </template>
 
-
-
 <script>
-import axios from 'axios'
+import L from "leaflet"; // Importa Leaflet
+
 export default {
-  name: 'HelloWorld',
   data() {
     return {
-      productos: [],
-      nuevoProducto: {
-        tipo: '',
-        marca: '',
-        nombre: ''
-      }
+      filtros: {
+        tipoCocina: '',
+        horario: '',
+        metodosPago: '',
+        vegetariano: '',
+        entregaDomicilio: '',
+      },
+      recomendaciones: [],
+      loading: false,
+      error: null,
+      mostrarMapa: false,
+      usuario: '', // Nombre de usuario
+      mapa: null, // Referencia al mapa
+      coordenadas: [6.1557, -75.3754], // Coordenadas por defecto
     };
+    
   },
   
-  async mounted() {
-    try {
-      var vue=this;
-      var result = await axios({
-        method: "GET",
-        url: "http://localhost:8090/api/v1/products",
-        data: {
-          query: `
-          {
-            producto{
-              id,
-              tipo,
-              marca
-            }
-          }
-          `
-        }
-      });
-      vue.productos=result.data;
-      console.log(vue.productos);
-    } catch (error) {
-      console.error(error);
-    }
-  },
   methods: {
-    async enviarProducto() {
-      try {
-        const response = await axios.post('http://localhost:8090/api/v1/products', {
-          tipo: this.nuevoProducto.tipo,
-          marca: this.nuevoProducto.marca,
-          nombre: this.nuevoProducto.nombre
-        });
-      console.log(response.data);
-      // hacer algo con la respuesta
-      } catch (error) {
-      console.error(error);
-      // manejar el error
+    obtenerRecomendaciones() {
+      this.loading = true;
+      this.error = null;
+      this.recomendaciones = [];
+
+      const filteredRestaurants = this.filtrarRestaurantes();
+
+      if (filteredRestaurants.length === 0) {
+        this.error = 'No se encontraron restaurantes que coincidan con los criterios.';
+        this.loading = false;
+        return;
       }
-      location.reload();
-    }
+
+      this.obtenerDatosRecomendados(filteredRestaurants);
+    },
+    filtrarRestaurantes() {
+      // Simula el filtrado de restaurantes según los criterios seleccionados
+      return [
+        { nombre: 'El Brasero de David  ', porcentaje: 66.28 },
+        { nombre: 'Restaurante La Abuela', porcentaje: 59.69 },
+        { nombre: 'La Granja de Papá', porcentaje: 59.05 },
+        { nombre: 'Café La Estación', porcentaje: 58.6 },
+        { nombre: 'La Estancia', porcentaje: 58.18 },
+      ];
+    },
+    async obtenerDatosRecomendados(restaurantes) {
+      try {
+        // Simula llamada a un servidor para obtener datos de recomendación
+        setTimeout(() => {
+          this.recomendaciones = restaurantes;
+          this.mostrarMapa = true;
+          this.cargarMapa();
+          this.loading = false;
+        }, 2000);
+      } catch (error) {
+        this.error = 'Hubo un error al obtener las recomendaciones.';
+        this.loading = false;
+      }
+    },
+    cargarMapa() {
+  if (this.mapa) {
+    this.mapa.remove(); // Elimina el mapa anterior, si existe
   }
+
+  this.mapa = L.map("map", { zoomAnimation: false }).setView(this.coordenadas, 13);
+
+  // Agrega capa de mapa base de OpenStreetMap
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(this.mapa);
+
+  // Marca la ubicación en el mapa
+  L.marker(this.coordenadas).addTo(this.mapa).bindPopup("¡Aquí estamos!").openPopup();
+  
+  // Asegura que el mapa se ajuste si cambia el tamaño
+  this.mapa.invalidateSize();
 }
+
+  },
+};
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-  h3 {
-    margin: 40px 0 0;
-  }
-  ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  li {
-    display: inline-block;
-    margin: 0 10px;
-  }
-  a {
-    color: #42b983;
-  }
-  .center-table {
-    margin: 0 auto;
-  }
-  .centerTable {
-    display: flex;
-    flex-direction: column;
-  }
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.title {
+  text-align: center;
+  color: #333;
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.form-group {
+  flex: 1 1 calc(33% - 20px);
+  display: flex;
+  flex-direction: column;
+}
+
+label {
+  font-weight: bold;
+  color: #555;
+  margin-bottom: 5px;
+}
+
+input,
+select {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:focus,
+select:focus {
+  border-color: #28a745;
+  outline: none;
+}
+
+.btn-submit {
+  background-color: #4CAF50;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-submit:hover {
+  background-color: #45a049;
+  transform: scale(1.02);
+}
+
+.alert {
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 4px;
+}
+
+.alert.info {
+  background-color: #e7f3fe;
+  color: #31708f;
+}
+
+.alert.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.recommendation-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+
+.recommendation-list li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+#map-container {
+  width: 100%; /* El contenedor ocupa todo el ancho disponible */
+  height: 500px; /* Establece una altura fija o usa un valor dinámico */
+  position: relative; /* Esto es importante si planeas hacer algún ajuste de posición en el mapa */
+  border: 2px solid #ddd; /* Puedes agregar un borde si lo deseas */
+  overflow: hidden; /* Esto asegura que el mapa no se salga del contenedor */
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+}
+
 </style>
