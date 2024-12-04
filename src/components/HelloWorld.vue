@@ -1,5 +1,9 @@
 <template>
   <div class="container">
+    <div class="button-principal">
+      <img src="/image.png" @click="irPrincipal" style="cursor: pointer;">
+    </div>
+
     <h2 class="title">Buscar Restaurantes<br><br></h2>
 
     <!-- Filtros -->
@@ -60,9 +64,6 @@
     <br><br>
     <!-- Nombre de usuario y botón de buscar -->
     <div class="form-row">
-      <div class="form-group"><br>
-        <input type="text" id="username" v-model="usuario" class="form-control" placeholder="Nombre de usuario" />
-      </div>
       <div class="form-group button-container">
         <button class="btn-submit" @click="obtenerRecomendaciones">Enviar</button>
       </div>
@@ -112,6 +113,9 @@ export default {
   },
   
   methods: {
+    irPrincipal() {
+      this.$router.push('/Principal');  // Redirige a la página Restaurantes
+    },
     obtenerRecomendaciones() {
       this.loading = true;
       this.error = null;
@@ -275,18 +279,34 @@ select:focus {
   justify-content: center;
   margin-top: 20px;
 }
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
 
 #map-container {
-  width: 100%; /* El contenedor ocupa todo el ancho disponible */
-  height: 500px; /* Establece una altura fija o usa un valor dinámico */
-  position: relative; /* Esto es importante si planeas hacer algún ajuste de posición en el mapa */
-  border: 2px solid #ddd; /* Puedes agregar un borde si lo deseas */
-  overflow: hidden; /* Esto asegura que el mapa no se salga del contenedor */
+  width: 100%; 
+  height: 500px; 
+  position: relative;
+  border: 2px solid #ddd; 
+  overflow: hidden; 
 }
 
 #map {
   width: 100%;
   height: 100%;
 }
+
+.button-principal {
+  display: flex;
+  flex-direction: row;  
+  gap: 20px;  
+  width: 100%;  
+}
+
+
+
+
 
 </style>

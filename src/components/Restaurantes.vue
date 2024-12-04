@@ -1,5 +1,8 @@
 <template>
   <div class="container">
+    <div class="button-principal">
+      <img src="/image.png" @click="irPrincipal" style="cursor: pointer;">
+    </div>
     <h2 class="title">Agregar nuevo Restaurante</h2>
     <form @submit.prevent="enviarRestaurante" class="form-container">
       <div class="form-group">
@@ -109,17 +112,19 @@ export default {
   },
   async mounted() {
     try {
-      const result = await axios.get('http://localhost:8090/api/v1/restaurante');
+      const result = await axios.get('http://localhost:8090/api/v1/restaurant');
       this.restaurante = result.data;
     } catch (error) {
       console.error('Error al cargar los restaurantes:', error);
     }
   },
   methods: {
-    
+    irPrincipal() {
+      this.$router.push('/Principal');  // Redirige a la página Restaurantes
+    },
     async enviarRestaurante() {
       try {
-        const response = await axios.post('http://localhost:8090/api/v1/restaurante', this.nuevoRestaurante);
+        const response = await axios.post('http://localhost:8090/api/v1/restaurant', this.nuevoRestaurante);
         this.restaurante.push(response.data);
         this.nuevoRestaurante = {
           nit: '',
@@ -229,4 +234,10 @@ select:focus {
   .styled-table tbody tr:nth-child(odd) {
     background-color: #f3f3f3;
   }
+  .button-principal {
+  display: flex;
+  flex-direction: row;  
+  gap: 20px;  
+  width: 100%;  
+}
 </style>

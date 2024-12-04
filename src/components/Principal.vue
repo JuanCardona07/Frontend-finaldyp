@@ -1,5 +1,11 @@
 <template>
   <div class="container">
+    <!-- Imagen de cerrar en la esquina superior derecha -->
+    <div class="button-principal">
+      <img 
+        src="/cerrar.png"  @click="irPrincipal"   alt="Cerrar" class="img-cerrar"  style="cursor: pointer;"
+      >
+    </div>
     <h1 class="title">Bienvenido a MEG</h1>
     <form class="form-container">
       <!-- Botones -->
@@ -15,19 +21,24 @@
 export default {
   name: 'PrincipalPage',
   methods: {
+    irPrincipal() {
+      this.$router.push('/');
+      alert(`Cerrando Sesión...`);
+    },
     irARestaurantes() {
-      this.$router.push('/Restaurantes');  // Redirige a la página Restaurantes
+      this.$router.push('/Restaurantes'); // Redirige a la página Restaurantes
     },
     irAHelloWorld() {
-      this.$router.push('/HelloWorld');  // Redirige a la página HelloWord
-    }
-  }
+      this.$router.push('/HelloWorld'); // Redirige a la página HelloWorld
+    },
+  },
 };
 </script>
 
 <style scoped>
 /* Contenedor principal */
 .container {
+  position: relative; /* Permite posicionar elementos hijos dentro del contenedor */
   max-width: 800px;
   margin: 0 auto; /* Centrar el contenedor */
   padding: 30px;
@@ -41,6 +52,14 @@ export default {
   align-items: center; /* Centra los elementos horizontalmente */
   justify-content: center; /* Centra los elementos verticalmente */
   height: 100vh; /* Asegura que el contenedor ocupe toda la altura de la pantalla */
+}
+
+/* Imagen de cerrar en la esquina superior derecha */
+.img-cerrar {
+  position: absolute;
+  top: 20px; /* Espaciado desde la parte superior */
+  right: 20px; /* Espaciado desde el lado derecho */
+  cursor: pointer; /* Cambia el cursor al pasar sobre la imagen */
 }
 
 /* Título */
@@ -80,18 +99,6 @@ export default {
 
 .btn-submit:hover {
   background-color: #45a049;
-  transform: scale(1.05);
-}
-
-/* Botón secundario */
-.secondary-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-}
-
-.secondary-btn:hover {
-  background-color: #0056b3;
   transform: scale(1.05);
 }
 
